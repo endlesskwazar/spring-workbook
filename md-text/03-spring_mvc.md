@@ -168,6 +168,57 @@ public String calculate(@RequestParam("expression") String expression) {
 
 ![](../resources/img/02/1.gif)
 
+**Додамо логіку калькулятора і перевірку на правильність введення даних**:
+
+```java
+@RequestMapping("/calculate")
+	@ResponseBody
+	public String calculate(@RequestParam("expression") String expression) {
+		if(expression == null || expression.isEmpty()) {
+			return "Wrong expression";
+		}
+		String[] operators = {"\\+", "-"};
+		String currentOperator = null;
+		ArrayList<String> operands = null;
+		for (String operator:operators) {
+			String[] spliceRes = expression.split(operator);
+			if (spliceRes.length == 2) {
+				operands = new ArrayList<String>(Arrays.asList(spliceRes));
+				currentOperator = operator;
+				break;
+			}
+		}
+		if (operands == null) {
+			return "Operation not supported.";
+		}
+		int a = 0;
+		int b = 0;
+		try {
+			a = Integer.parseInt(operands.get(0));
+			b = Integer.parseInt(operands.get(1));
+		}
+		catch ( NumberFormatException e ) {
+			return "Please enter an integer numbers.";
+		}
+		int res = 0;
+		if (currentOperator.equals("\\+")) {
+			res = a + b;
+		} else {
+			res = a - b;
+		}
+		return "Result of evaluation " + res;
+	}
+```
+
+![](../resources/img/02/2.gif)
+
+**Створимо представлення для виведення результату обчислення**:
+
+**Готовий проект можна знайти:**
+
+- репозиторій - іваів
+- гілка - іваіва
+
 
 # CRUD - проект
 
