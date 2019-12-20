@@ -172,10 +172,54 @@ public String calculate(@RequestParam("expression") String expression) {
 
 ```java
 @RequestMapping("/calculate")
-	@ResponseBody
-	public String calculate(@RequestParam("expression") String expression) {
+@ResponseBody
+public String calculate(@RequestParam("expression") String expression) {
+	if(expression == null || expression.isEmpty()) {
+		return "Wrong expression";
+	}
+	String[] operators = {"\\+", "-"};
+	String currentOperator = null;
+	ArrayList<String> operands = null;
+	for (String operator:operators) {
+		String[] spliceRes = expression.split(operator);
+		if (spliceRes.length == 2) {
+			operands = new ArrayList<String>(Arrays.asList(spliceRes));
+			currentOperator = operator;
+			break;
+		}
+	}
+	if (operands == null) {
+		return "Operation not supported.";
+	}
+	int a = 0;
+	int b = 0;
+	try {
+		a = Integer.parseInt(operands.get(0));
+		b = Integer.parseInt(operands.get(1));
+	}
+	catch ( NumberFormatException e ) {
+		return "Please enter an integer numbers.";
+	}
+	int res = 0;
+	if (currentOperator.equals("\\+")) {
+		res = a + b;
+	} else {
+		res = a - b;
+	}
+	return "Result of evaluation " + res;
+}
+```
+
+![](../resources/img/02/2.gif)
+
+**Створимо представлення для виведення результату обчислення**. Але перед цим потрібно відповісти на запитвння - як передати дані із контролера у представлення. Для цього нам допоможе об'єкт Model. Model - клас Spring, який схожий на структуру ключ - значення, ми можемо додати дані і ключ для доступу до них в об'єкт Model і отримати доступ до цих даних безпосередньо в представлені. Модифікуємо контролер:
+
+```java
+	@RequestMapping("/calculate")
+	public String calculate(@RequestParam("expression") String expression, Model model) {
 		if(expression == null || expression.isEmpty()) {
-			return "Wrong expression";
+			model.addAttribute("message", "Wrong expression");
+			return "res";
 		}
 		String[] operators = {"\\+", "-"};
 		String currentOperator = null;
@@ -189,7 +233,8 @@ public String calculate(@RequestParam("expression") String expression) {
 			}
 		}
 		if (operands == null) {
-			return "Operation not supported.";
+			model.addAttribute("message", "Operation not supported.");
+			return "res";
 		}
 		int a = 0;
 		int b = 0;
@@ -198,7 +243,8 @@ public String calculate(@RequestParam("expression") String expression) {
 			b = Integer.parseInt(operands.get(1));
 		}
 		catch ( NumberFormatException e ) {
-			return "Please enter an integer numbers.";
+			model.addAttribute("message", "Please enter an integer numbers.");
+			return "res";
 		}
 		int res = 0;
 		if (currentOperator.equals("\\+")) {
@@ -206,27 +252,41 @@ public String calculate(@RequestParam("expression") String expression) {
 		} else {
 			res = a - b;
 		}
-		return "Result of evaluation " + res;
+		model.addAttribute("Result of evaluation " + res);
+		return "res";
 	}
 ```
 
-![](../resources/img/02/2.gif)
+Як видно із коду метод в контролері тепер приймає додатковий параметр ```Model model```. Використовуючи метод addAttribute ми можемо доати пару ключ - значення. Далі Spring сам зроби так щоб всі дані які ми додали у Model були доступні на представленні.
 
-**Створимо представлення для виведення результату обчислення**:
+Також ми прибрали анотацію @ResponseBody, а це означає, що тепер якщо ми повертаємо строку Spring спробує знайти представлення, яке відповідає значення цієї строки. Тому створимо представлення із назвою res.html:
 
-**Готовий проект можна знайти:**
+![](../resources/img/02/9.png)
 
-- репозиторій - іваів
-- гілка - іваіва
+Вміст res.html наступний:
 
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <p th:text="${message}"></p>
+</body>
+</html>
+```
+
+**Готовий проект можна знайти** [тут](https://github.com/endlesskwazar/spring-examples/tree/mvc-calc).
 
 # CRUD - проект
 
-## Repository
-
-## Service
-
 ## Як буде виглядати розроблений проект
+
+## Repository, Service
 
 ## Вивести список
 
@@ -238,16 +298,12 @@ public String calculate(@RequestParam("expression") String expression) {
 
 # Домашнє завдання
 
-Запропонуйте власну реалізацію динамічного масиву, який заснований на звичайномк масивові. Інтерфейс - add(elem), remove(elem), remove(index), get(index), isExists(elem).
+До проекту shop-basic-mvc доробіть функціонал редагування.
 
 # Контрольні запитання
 
 1. Що таке Spring MVC? Поясніть патерн MVC.
 2. Поясніть процес створення контролера в Spring MVC.
 3. Що таке Thymeleaf?
-4. Перелічіть інтерфейси Java Collection Map.
-5. Поясніть колекції - Hashtable, HashMap, LinkedHashMap, TreeMap.
-6. Поясніть колекції - Vector, Stack, ArrayList, LinkedList.
-7. Поясніть колекції - HashSet, LinkedHashSet, TreeSet.
-8. Поясніть колекції - PriorityQueue, ArrayDeque.
-9. Як вибрати, яку колекцію використовувати?
+4. Як можна передати дані із контролера в представлення?
+5. Поясніть Repository і Service.
