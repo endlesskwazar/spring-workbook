@@ -196,9 +196,224 @@ Spring Core забезпечує ключові частини фреймвор�
 
 ![](../resources/img/1/4.png)
 
+Наступним етапом є вибір залежностей для проекту. В нашому випадку ми не будемо нічого вибирати.
+
+![](../resources/img/1/5.png)
+
+В результаті буде створений наступний проект.
+
+![](../resources/img/1/6.png)
+
+Він містить лише main класс, який є точкою входу в Spring Boot Application. Вся магія конфігурації Spring Boot прихована в анотації @SpringBootApplicationю
+
 # Конфігурація впровадження, використовуючи XML
 
+Створимо наступні класи і інтерфейси в проекті:
+
+**Printable.java:**
+```java
+package com.example.demo.print;
+
+public interface Printable {
+
+	public String getTextToPrint();
+	
+}
+```
+
+**Statistic.java:**
+```java
+package com.example.demo.print;
+
+public class Statistic implements Printable {
+
+	@Override
+	public String getTextToPrint() {
+		return "Statistic for some date ranges";
+	}
+
+}
+```
+
+**PrintSystem.java:**
+```java
+package com.example.demo.print;
+
+public class PrintSystem {
+	
+	Printable source = new Statistic();
+
+	public Printable getSource() {
+		return source;
+	}
+
+	public void setSource(Printable source) {
+		this.source = source;
+	}
+	
+	public String print() {
+		return source.getTextToPrint();
+	}
+
+}
+```
+
+Перевіримо роботоспроможність класів, модифікувавши main - клас:
+```java
+public static void main(String[] args) {
+	SpringApplication.run(DemoApplication.class, args);
+	PrintSystem printSystem = new PrintSystem();
+	System.out.println(printSystem.print());
+}
+```
+
+![](../resources/img/1/7.png)
+
+Головною проблемо коду є наступний рядок, який пов'язую класи PrintSystem і Statistic місним зв'язком.
+
+```java
+Printable source = new Statistic();
+```
+
+Давайте видалимо ініціалізацію Printable взагалі. Звісно після цього код уже не буде працювати:
+
+![](../resources/img/1/8.png)
+
+**Тепер в дію вступає DI і IoC.**
+
+Створимо файл beans.xml в src/main/resources з наступним вмістом:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	<bean 
+		id="statistic"
+		class="com.example.demo.print.Statistic"/>
+	<bean 
+		id="printSystem"
+		class="com.example.demo.print.PrintSystem">
+	<property name="source" ref="statistic"/>
+	</bean>
+</beans>
+```
+
+Ми створюємо опис створення стіорення класів і надання їм залежностей. Що тепер протестувати код, ми не можемо вручну створити екземпляр класу PrintSystem. Нам доведеться взяти його із контексту:
+
+```java
+public static void main(String[] args) {
+	SpringApplication.run(DemoApplication.class, args);
+	ApplicationContext applicationContext = new ClassPathXmlApplicationContext("beans.xml");
+	PrintSystem printSystem = applicationContext.getBean("printSystem", PrintSystem.class);
+	System.out.println(printSystem.print());
+}
+```
+
+![](../resources/img/1/9.png)
+
+В цьому випадку ми використали впровадження залежностей використовуючи setter. Який повинен бути визначений в класі. Також можна використати конструктор для впровадження залежностей.
+
+Модифікуємо PrintSystem:
+
+```java
+public class PrintSystem {
+	
+	public PrintSystem(Printable source) {
+		this.source = source;
+	}
+	
+	private Printable source;
+
+	public String print() {
+		return source.getTextToPrint();
+	}
+
+}
+```
+
+Модифікуємо beans.xml
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	<bean 
+		id="statistic"
+		class="com.example.demo.print.Statistic"/>
+	<bean 
+		id="printSystem"
+		class="com.example.demo.print.PrintSystem">
+	<constructor-arg ref="statistic" />
+	</bean>
+</beans>
+```
+
+Для закріплення давайте додамо ще один клас:
+
+Cnf.java
+```java
+package com.example.demo.print;
+
+import java.time.LocalDateTime;
+
+public class Cnf {
+	
+	private final LocalDateTime current;
+	
+	public Cnf() {
+		current = LocalDateTime.now();
+	}
+	
+	public String getInfo() {
+		return "Generated on " + current.toString();
+	}
+}
+```
+
+Модифікуємо Statistic.java:
+
+```java
+package com.example.demo.print;
+
+public class Statistic implements Printable {
+	
+	private final Cnf cnf;
+	
+	public Statistic(Cnf cnf) {
+		this.cnf= cnf;
+	}
+
+	@Override
+	public String getTextToPrint() {
+		return "Statistic for some date ranges" + cnf.getInfo();
+	}
+
+}
+```
+
+І модифікуємо beans.xml для того щоб наша система запрацювала:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	<bean id="cnf" class="com.example.demo.print.Cnf" />
+	<bean id="statistic" class="com.example.demo.print.Statistic">
+		<constructor-arg ref="cnf" />
+	</bean>
+	<bean id="printSystem" class="com.example.demo.print.PrintSystem">
+		<constructor-arg ref="statistic" />
+	</bean>
+</beans>
+```
+
+![](../resources/img/1/10.png)
+
+
 # Конфігурація впровадження, використовуючи Java
+
 
 # Домашня робота
 
