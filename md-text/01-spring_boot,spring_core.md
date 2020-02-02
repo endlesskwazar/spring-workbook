@@ -411,8 +411,126 @@ public class Statistic implements Printable {
 
 ![](../resources/img/1/10.png)
 
+Проект можнай знайти на https://github.com/endlesskwazar/spring-examples гілка - di-xml
+
 
 # Конфігурація впровадження, використовуючи Java
+
+Ми з Вами вже розглянули впровадження залежностей чере описання в файлі XML. Цей спосіб існував із самого початку і на теперішній момент є дещо застарілий, тепер натомість можна використовувати Java - конфігурацію, точніше анотації.
+
+Давайте розглянемо теорію перед тим як переходити до практики.
+
+Для того щоб Spring знав про клас, який може бути використаний для запровадження потрібно використати одну із декількох анотацій: Component, Controller, Service, Repository.
+
+Кожна з цих анотацій слугує одній цілі, але розділення несе в собі класифікацію компонентів і внутрішню логіку роботи з цими класами в самому Spring:
+
+|Анотація|Пояснення|
+|-|-|
+|Component|Загальний тип|
+|Controller|Тип презентаційного шару|
+|Service|Тип шару сервісів|
+|Repository|Тип шару доступу до даних|
+
+Після того, як всі необхідні залежності помічені, в тих місцях де потріюно впроваджквати залежності потрібно використати анотацію Autowired.
+
+В якості прикладу використаємо нащ минулий проект. Видалимо із нього beans.xml. Зрозуміло, що після цього проект працювати не буде.
+
+Давайте використаємо всі ті анотації, які ми розглянули:
+
+**Cnf.java**
+```java
+package com.example.demo.print;
+
+import java.time.LocalDateTime;
+
+import org.springframework.stereotype.Component;
+
+@Component
+public class Cnf {
+	
+	private final LocalDateTime current;
+	
+	public Cnf() {
+		current = LocalDateTime.now();
+	}
+	
+	public String getInfo() {
+		return "Generated on " + current.toString();
+	}
+}
+```
+
+**PrintSystem.java***
+```java
+package com.example.demo.print;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component
+public class PrintSystem {
+	
+	public PrintSystem(Printable source) {
+		this.source = source;
+	}
+	
+	@Autowired
+	private Printable source;
+
+	public String print() {
+		return source.getTextToPrint();
+	}
+
+}
+```
+
+**Statistic.java**
+```java
+package com.example.demo.print;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component
+public class Statistic implements Printable {
+	
+	@Autowired
+	private final Cnf cnf;
+	
+	public Statistic(Cnf cnf) {
+		this.cnf= cnf;
+	}
+
+	@Override
+	public String getTextToPrint() {
+		return "Statistic for some date ranges" + cnf.getInfo();
+	}
+
+}
+```
+
+Для того щоб додаток запрацював також потрібно модифікувати main - клас:
+
+```java
+package com.example.demo;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationContext;
+
+import com.example.demo.print.PrintSystem;
+
+@SpringBootApplication
+public class DemoApplication {
+
+	public static void main(String[] args) {
+		ApplicationContext applicationContext = SpringApplication.run(DemoApplication.class, args);
+	    PrintSystem printSystem = applicationContext.getBean(PrintSystem.class);
+		System.out.println(printSystem.print());
+	}
+
+}
+```
 
 
 # Домашня робота
