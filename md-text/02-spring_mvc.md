@@ -286,7 +286,17 @@ public String calculate(@RequestParam("expression") String expression) {
 
 ## Як буде виглядати розроблений проект
 
+![](../resources/img/02/10.gif)
+
 ## Repository, Service
+
+![](../resources/img/02/11.png)
+
+## Створюємо проект
+
+
+
+## Створення архітектури
 
 ## Вивести список
 
