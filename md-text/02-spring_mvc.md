@@ -608,15 +608,300 @@ public class ProductController {
 
 ## Вивести список
 
+Почнімо із показу списку всіх продуктів. Для цього імплементуємо метод findAll в класі ProductRepository:
+
+ProductRepository:
+```java
+...
+@Override
+public Iterable<Product> findAll() {
+	return DummyData.getInstance().getProducts();
+}
+...
+```
+
+Додамо метод getAllProducts в ProductService:
+
+ProductService:
+```java
+...
+public Iterable<Product> getAllProducts(){
+	return productRepository.findAll();
+}
+...
+```
+
+Створимо метод list в класі ProductController:
+
+ProductController:
+```java
+...
+@RequestMapping("/products")
+public String list(Model model) {
+	model.addAttribute("products", productService.getAllProducts());
+	return "products/list";
+}
+...
+```
+
+І не забудимо створити представлення:
+
+products/list.html:
+```html
+<!DOCTYPE html>
+<html xmlns:layout="http://www.w3.org/1999/xhtml"
+	layout:decorate="~{layouts/layout}">
+<head>
+<title>Products</title>
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no">
+</head>
+<body>
+	<div class="container" layout:fragment="content">
+		<div class="row">
+			<div class="col">
+				<h1>Products</h1>
+				<hr />
+				<a th:href="@{/products/create}" class="btn btn-primary mb-3"><i class="fas fa-plus-circle"></i> Create new product</a>
+				<table class="table table-hover bg-white">
+					<thead>
+						<tr>
+							<th>Title</th>
+							<th>Price</th>
+							<th>Description</th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="product : ${products}">
+							<td><a th:href="@{'/products/' + ${product.id}}"
+								th:text="${product.title}"></a></td>
+							<td th:text="${product.price}"></td>
+							<td th:text="${product.description}"></td>
+							<td>
+							<form method="POST" th:action="@{'/products/' + ${product.id}}">
+							<input type="hidden" name="_method" value="DELETE"/>
+							<button type="submit" class="btn btn-danger"><i
+									class="fas fa-trash-alt" style="color:white"></i></button>
+									</form>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
+```
+
 ## Подивитися деталі
+
+Повторимо процедуру для перегляду деталей продукту:
+
+ProductRepository:
+```java
+...
+@Override
+public Optional<Product> getById(Long id) {
+	return DummyData.getInstance().getProducts().stream()
+			.filter(p -> p.getId().equals(id))
+			.findAny();
+}
+...
+```
+
+ProductService:
+```java
+...
+public Product getById(Long id) {
+	return productRepository.getById(id).get();
+}
+...
+```
+
+ProductController:
+```java
+...
+@RequestMapping(value = "/products/{id}", method = RequestMethod.GET)
+public String details(@PathVariable("id") long id, Model model) {
+	model.addAttribute("product", productService.getById(id));
+	return "products/details";
+}
+...
+```
+
+products/list.html:
+```html
+<!DOCTYPE html>
+<html xmlns:layout="http://www.w3.org/1999/xhtml"
+	layout:decorate="~{layouts/layout}">
+<head>
+<title>Product details</title>
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no">
+</head>
+<body>
+	<div class="container" layout:fragment="content">
+		<div class="row">
+			<div class="col">
+				<h1 th:text="'Product ' + ${product.title} + ' details'"></h1>
+				<hr />
+				<ul class="list-group">
+					<li class="list-group-item" th:text="'Title: ' + ${product.title}"></li>
+					<li class="list-group-item" th:text="'Description ' + ${product.description}"></li>
+					<li class="list-group-item" th:text="'Price ' + ${product.price}"></li>
+				</ul>
+				<hr />
+				<a th:href="@{/products}">Back to list</a>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
+```
 
 ## Додавання
 
+Повторимо процедуру для додавання нового продукта:
+
+ProductRepository:
+```java
+...
+@Override
+public Product save(Product entity) {
+	Product maxById = DummyData.getInstance().getProducts()
+				.stream()
+				.max(Comparator.comparing(Product::getId))
+				.orElseThrow(NoSuchElementException::new);
+	entity.setId(maxById.getId() + 1);
+	DummyData.getInstance().getProducts().add(entity);
+	return entity;
+}
+...
+```
+
+ProductService:
+```java
+...
+public Product create(Product product) {
+	return productRepository.save(product);
+}
+...
+```
+
+ProductController:
+```java
+...
+@RequestMapping("/products/create")
+public String showCreateForm() {
+	return "products/create";
+}
+
+@RequestMapping(value = "/products", method = RequestMethod.POST)
+public String create(@ModelAttribute Product product) {
+	productService.create(product);
+	return "redirect:/products";
+}
+...
+```
+
+products/create.html:
+```html
+<!DOCTYPE html>
+<html xmlns:layout="http://www.w3.org/1999/xhtml"
+	layout:decorate="~{layouts/layout}">
+<head>
+<title>Create new product</title>
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no">
+</head>
+<body>
+	<div class="container" layout:fragment="content">
+		<div class="row">
+			<div class="col">
+				<h1>Create new product</h1>
+				<hr />
+
+				<div class="card">
+					<div class="card-body">
+						<form method="POST" th:action="@{/products}">
+							<div class="form-group">
+								<label>Title</label> <input type="text" class="form-control"
+									placeholder="Title" name="title">
+							</div>
+							<div class="form-group">
+								<label>Description</label> <textarea type="text"
+									class="form-control" placeholder="Description" name="description"></textarea>
+							</div>
+							<div class="form-group">
+								<label>Price</label> <input type="text" class="form-control"
+									placeholder="Price" name="price">
+							</div>
+							<button type="submit" class="btn btn-primary">Submit</button>
+						</form>
+					</div>
+				</div>
+
+				<hr />
+				<a th:href="@{/products}">Back to list</a>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
+```
+
 ## Видалення
+
+Повторимо процедуру для видалення:
+
+Повторимо процедуру для додавання нового продукта:
+
+ProductRepository:
+```java
+...
+public void removeById(Long id) {
+	Product productToDelete = DummyData.getInstance().getProducts().stream()
+			.filter(p -> p.getId().equals(id))
+			.findAny()
+			.get();
+	DummyData.getInstance().getProducts().remove(productToDelete);
+}
+...
+```
+
+ProductService:
+```java
+...
+public void removeById(Long id) {
+	productRepository.removeById(id);
+}
+...
+```
+
+ProductController:
+```java
+...
+@RequestMapping(value = "/products/{id}", method= RequestMethod.DELETE)
+public String remove(@PathVariable("id") long id) {
+	productService.removeById(id);
+	return "redirect:/products";
+}
+...
+```
+
+## Фінальний результат
+
+Готовий проект можна знайти [тут.](https://github.com/endlesskwazar/spring-examples/tree/shop-basic-mvc)
+
 
 # Домашнє завдання
 
-До проекту shop-basic-mvc доробіть функціонал редагування.
+До проекту shop-basic-mvc доробіть:
+- Функціонал редагування
+- Відображення сторінки помилки, якщо користувач запросить не існуючий продукт
+- Підтвердження видалення продукта
 
 # Контрольні запитання
 
