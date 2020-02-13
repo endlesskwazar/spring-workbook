@@ -294,9 +294,317 @@ public String calculate(@RequestParam("expression") String expression) {
 
 ## Створюємо проект
 
+Створимо новий Spring Boot проект:
 
+![](../resources/img/02/12.png)
+
+Із наступними залежностями:
+
+![](../resources/img/02/13.png)
+
+В проекті ми будемо використовувати bootstrap, тому додамо залежності, модифікувавши pom.xml:
+
+```xml
+<dependency>
+	<groupId>org.webjars</groupId>
+	<artifactId>bootstrap</artifactId>
+	<version>4.0.0</version>
+</dependency>
+<dependency>
+	<groupId>org.webjars</groupId>
+	<artifactId>font-awesome</artifactId>
+	<version>5.12.0</version>
+</dependency>
+```
+
+Також ми будемо використовувати thymeleaf-layout-dialect для організації шаблонів:
+
+```xml
+<dependency>
+	<groupId>nz.net.ultraq.thymeleaf</groupId>
+	<artifactId>thymeleaf-layout-dialect</artifactId>
+</dependency>
+```
+
+В директорії resources/templates створимо дві нові директорії:
+- layouts
+  - layout.html
+- products
+
+Вміст layout.html наступний:
+
+```html
+<!DOCTYPE html>
+<html>
+	<head>
+		<title layout:title-pattern="$LAYOUT_TITLE - $CONTENT_TITLE">Spring-Shop</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<link th:href="@{/webjars/bootstrap/4.0.0/css/bootstrap.min.css}" rel="stylesheet" media="screen" />
+		<link rel="stylesheet" th:href="@{/webjars/font-awesome/5.12.0/css/all.min.css}">
+		<link rel="stylesheet" th:href="@{/styles/styles.css}">
+	</head>
+	<body>
+		<!-- This content will be replaced by the pages -->
+		<div class="container" layout:fragment="content">
+			
+		</div>
+	</body>
+</html>
+```
+
+Ми також будемо використовувати самописні css-стилі. Створимо в директорії static директорії styles із файлом styles.css. Вміст styles.css наступний:
+
+```css
+@charset "UTF-8";
+
+body {
+	background-color: #f2f2f2;
+}
+```
+
+HTML - форми мають вбудовану підтримку лише для POST, GET - запитів. Для імітації інших HTTP - методів буде використовуватися MethodOvveride.
+
+Створимо клас MethodOvverideConfig:
+```java
+package com.example.demo;
+
+import java.util.Arrays;
+
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.filter.HiddenHttpMethodFilter;
+
+@Configuration
+public class MethodOvverideConfig {
+
+	@Bean
+	public FilterRegistrationBean hiddenHttpMethodFilter() {
+		// TODO: FilterRegistrationBean is generic
+		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(new HiddenHttpMethodFilter());
+		filterRegistrationBean.setUrlPatterns(Arrays.asList("/*"));
+		return filterRegistrationBean;
+	}
+	
+}
+```
 
 ## Створення архітектури
+
+Створимо доменну модель:
+
+Product:
+
+```java
+package com.example.demo.model;
+
+import java.math.BigDecimal;
+
+public class Product {
+	
+	private Long id;
+	public Long getId() {
+		return id;
+	}
+	public void setId(Long id) {
+		this.id = id;
+	}
+	private String title;
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
+	}
+	public String getDescription() {
+		return description;
+	}
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	public BigDecimal getPrice() {
+		return price;
+	}
+	public void setPrice(BigDecimal price) {
+		this.price = price;
+	}
+	private String description;
+	private BigDecimal price;
+	public Product(Long id, String title, String description, BigDecimal price) {
+		super();
+		this.id = id;
+		this.title = title;
+		this.description = description;
+		this.price = price;
+	}
+	@Override
+	public String toString() {
+		return "Product [title=" + title + ", description=" + description + ", price=" + price + "]";
+	}
+	
+}
+```
+
+В цьому прикладі ми не будемо використовувати базу даних, тому створимо dummy - клас, який буде містити дані для тестування:
+
+DummyData:
+
+```java
+package com.example.demo.dummydata;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+import com.example.demo.model.Product;
+
+public class DummyData {
+
+	private static DummyData instance;
+	
+	private ArrayList<Product> products;
+	
+	public ArrayList<Product> getProducts() {
+		return products;
+	}
+
+	private DummyData() {
+		products = new ArrayList<Product>(Arrays.asList(
+				new Product(Long.valueOf(1), "Samsung galaxy Tab 2", "Phone or tablet.", new BigDecimal(8000)),
+				new Product(Long.valueOf(1), "DELL XPS 13", "Business laptop.", new BigDecimal(40000))
+				));
+	}
+	
+	public static DummyData getInstance() {
+		if (instance == null) {
+			instance = new DummyData();
+		}
+		return instance;
+	}
+	
+}
+```
+
+Створимо інтерфейс для репозиторіїв:
+
+Repository:
+```java
+package com.example.demo.repository;
+
+import java.util.Optional;
+
+public interface Repository<T, ID> {
+
+	T save(T entity);
+	Optional<T> getById(ID id);
+	Iterable<T> findAll();
+	void removeById(ID id);
+	
+}
+```
+
+Створимо імплементацію репозиторія:
+
+ProductRepository:
+```java
+package com.example.demo.repository;
+
+import java.util.Comparator;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import org.springframework.stereotype.Repository;
+import com.example.demo.model.Product;
+import com.example.demo.dummydata.DummyData;
+
+@Repository
+public class ProductRepository implements com.example.demo.repository.Repository<Product, Long> {
+
+	@Override
+	public Product save(Product entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Optional<Product> getById(Long id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Iterable<Product> findAll() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void removeById(Long id) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+}
+```
+
+Створимо сервіс:
+ProductService:
+```java
+package com.example.demo.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import com.example.demo.model.Product;
+import com.example.demo.repository.Repository;
+
+@Service
+public class ProductService {
+	
+	@Autowired
+	private Repository<Product, Long> productRepository;
+	
+	public Iterable<Product> getAllProducts(){
+		return productRepository.findAll();
+	}
+	
+	public Product getById(Long id) {
+		return productRepository.getById(id).get();
+	}
+	
+	public Product create(Product product) {
+		return productRepository.save(product);
+	}
+	
+	public void removeById(Long id) {
+		productRepository.removeById(id);
+	}
+
+}
+```
+
+І нарешті створимо контроллер:
+ProductController:
+```java
+package com.example.demo.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+import com.example.demo.model.Product;
+import com.example.demo.service.ProductService;
+
+@Controller
+public class ProductController {
+	
+	@Autowired
+	private ProductService productService;
+	
+}
+```
 
 ## Вивести список
 
