@@ -259,25 +259,109 @@ public class InititJdbTemplateTables implements CommandLineRunner {
 
 ![](../resources/img/jdbc_templates/3.png)
 
+## Готуємо ProductRepositoryJdbc
+
+Додамо інжекцію класу JdbcTemplate в ProductRepositoryJdbc:
+
+**ProductRepositoryJdbc:**
+```java
+...
+@Autowired
+private JdbcTemplate jdbcTemplate;
+...
+```
+
 ## Отримати список
+
+**ProductRepositoryJdbc:**
+```java
+...
+@Override
+public Iterable<Product> findAll() {
+	return jdbcTemplate.query(
+			"select * from products;",
+			(rs, rowNum) ->
+					new Product(
+							rs.getLong("id"),
+							rs.getString("title"),
+							rs.getString("description"),
+							rs.getBigDecimal("price")
+					)
+	);
+}
+...
+```
 
 ## Деталі
 
+**ProductRepositoryJdbc:**
+```java
+...
+@Override
+public Optional<Product> getById(Long id) {
+	return jdbcTemplate.queryForObject(
+			"select * from products where id = ?",
+			new Object[] {id},
+			(res, rowNum) ->
+				Optional.of(new Product(
+						res.getLong("id"),
+						res.getString("title"),
+						res.getString("description"),
+						res.getBigDecimal("price")
+						))
+			);
+}
+...
+```
+
 ## Додавання
+
+**ProductRepositoryJdbc:**
+```java
+@Override
+public Product save(Product entity) {
+	KeyHolder keyHolder = new GeneratedKeyHolder();
+	jdbcTemplate.update( conn -> {
+		PreparedStatement ps = conn.prepareStatement(
+				"insert into products(title, description, price) values (?, ?, ?)",
+				new String[] {"id"}
+				);
+		ps.setString(1, entity.getTitle());
+		ps.setString(2, entity.getDescription());
+		ps.setBigDecimal(3, entity.getPrice());
+		return ps;
+	}, keyHolder);
+	entity.setId(keyHolder.getKey().longValue());
+	return entity;
+}
+```
 
 ## Видалення
 
+**ProductRepositoryJdbc:**
+```java
+...
+@Override
+public void removeById(Long id) {
+	jdbcTemplate.update("delete products where id = ?", id);
+}
+...
+```
+
+## Фінальний проект
+
+Готовий проект можна знайти на [shop-jdbc](https://github.com/endlesskwazar/spring-examples/tree/shop-jdbc)
+
 # Домашнє завдання
 
-Запропонуйте власну реалізацію динамічного масиву, який заснований на звичайномк масивові. Інтерфейс - add(elem), remove(elem), remove(index), get(index), isExists(elem).
+До проекту [shop-jdbc]() доробіть:
+1. Модифікація інформації продукту, використовуючи JDBC Template.
+2. Додайте поле createdAt, яке автоматично заповнюється датою і чосом, яким було додано продукт. Для вибору типу даних перегляньте документацію [h2](http://www.h2database.com/html/datatypes.html).
 
 # Контрольні запитання
 
-1. Що таке Generics і навіщо вони потрібні?
-2. Що таке Java Collection Framework?
-3. Перелічіть інтерфейси Java Collection Map.
-4. Поясніть колекції - Hashtable, HashMap, LinkedHashMap, TreeMap.
-4. Поясніть колекції - Vector, Stack, ArrayList, LinkedList.
-4. Поясніть колекції - HashSet, LinkedHashSet, TreeSet.
-4. Поясніть колекції - PriorityQueue, ArrayDeque.
-4. Як вибрати, яку колекцію використовувати?
+1. Для чого в Spring використовується application.properties?
+2. Що таке Spring Profiles? Як створити і активувати профіль?
+3. Що таке JDBC Template? Чим JDBC Template відрізняється від JDBC?
+4. Який ключовий клас JDBC Template. перелічіть його методи.
+5. Як виконати код, одразу після того, як додаток Spring запустився?
