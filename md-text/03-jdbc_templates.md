@@ -36,8 +36,8 @@ System.out.println(this.myProp);
 ```
 
 > Назви властивостей можуть мати крапки у своїх іменах.
-> 
-> application.properties можуть містити властивісті, які визначені користувачем, так і властивості, які вбудовані і предназначені для конфігурації Spring. Подивитися список визначених властей можна [тут](https://docs.spring.io/spring-boot/docs/current/reference/html/appendix-application-properties.html).
+>
+> application.properties можуть містити властивості, які визначені користувачем, так і властивості, які вбудовані й створені для конфігурації Spring. Подивитися список визначених властивостей можна [тут](https://docs.spring.io/spring-boot/docs/current/reference/html/appendix-application-properties.html).
 
 # Spring profiles
 
@@ -67,13 +67,13 @@ application-jdbc.properties:
 myprop=my prop jdbc value
 ```
 
-Як результати ми отримаємо значення myprop = my prop jdbc value. Якщо ми видалимо строчку spring.profiles.active=jdbc, то значення myprop = myprop value.
+Як результати ми отримаємо значення myprop = my prop jdbc value. Якщо ми видалимо рядок spring.profiles.active=jdbc, то значення myprop = myprop value.
 
-Для створення і активації профілю потрібно:
+Для створення та активації профілю потрібно:
 - Створити файл application-[profile_name].properties. Всі значення, які цей файл визначає будуть перезаписані поверх application.properties
 - Активувати профіль в application.properties за допомогою вказання атрибута spring.profiles.active=[profile-name]
 
-Додаймо до проекту ще одну реалізацію інтерфейсу Repository для роботи із продуктами:
+Додаймо до проєкту ще одну реалізацію інтерфейсу Repository для роботи із продуктами:
 
 ProductRepositoryJdbc:
 ```java
@@ -107,7 +107,7 @@ public class ProductRepositoryJdbc implements com.example.demo.repository.Reposi
 }
 ```
 
-Тепер в нас ж два компоненти, які можуть бути використані в ProductService, а саме:
+Тепер в нас два компоненти, які можуть бути використані в ProductService, а саме:
 - ProductRepository
 - ProductRepositoryJdbc
 
@@ -132,8 +132,8 @@ public class ProductRepository implements com.example.demo.repository.Repository
 Spring JDBC Template - це потужний механізм підключення до бази даних та виконання запитів SQL. Він внутрішньо використовує JDBC api, але усуває безліч проблем JDBC API.
 
 Spring JDBC Template:
-- Бере на себе багато boilerplate - код, який необхідний для користуванням JDBC
-- Дає зручний інтерфейс для приведення редяційної моделі до об'єктів
+- Бере на себе багато boilerplate - код, який необхідний для користування JDBC
+- Дає зручний інтерфейс для приведення реляційної моделі до об'єктів
 
 JdbcTemplate - центральний клас у Spring Template. Він піклується про створення та звільнення ресурсів, таких як створення та закриття об'єкта зв'язку тощо. Тому це не призведе до жодних проблем, якщо ви забудете закрити з'єднання.
 
@@ -141,7 +141,7 @@ JdbcTemplate - центральний клас у Spring Template. Він пік
 
 Ми можемо виконувати всі операції з базою даних за допомогою класу JdbcTemplate, такі як вставка, оновлення, видалення та отримання даних із бази даних.
 
-Давайте розглянемо методи весняного класу JdbcTemplate.
+Розгляньмо методи весняного класу JdbcTemplate.
 
 |Метод|Пояснення|
 |-|-|
@@ -354,14 +354,14 @@ public void removeById(Long id) {
 
 # Домашнє завдання
 
-До проекту [shop-jdbc]() доробіть:
+До проєкту [shop-jdbc]() доробіть:
 1. Модифікація інформації продукту, використовуючи JDBC Template.
-2. Додайте поле createdAt, яке автоматично заповнюється датою і чосом, яким було додано продукт. Для вибору типу даних перегляньте документацію [h2](http://www.h2database.com/html/datatypes.html).
+2. Додайте поле createdAt, яке автоматично заповнюється датою і часом, яким було додано продукт. Для вибору типу даних перегляньте документацію [h2](http://www.h2database.com/html/datatypes.html).
 
 # Контрольні запитання
 
 1. Для чого в Spring використовується application.properties?
-2. Що таке Spring Profiles? Як створити і активувати профіль?
+2. Що таке Spring Profiles? Як створити та активувати профіль?
 3. Що таке JDBC Template? Чим JDBC Template відрізняється від JDBC?
 4. Який ключовий клас JDBC Template. перелічіть його методи.
 5. Як виконати код, одразу після того, як додаток Spring запустився?
