@@ -223,6 +223,10 @@ spring.h2.console.enabled=true
 
 Доступні параметри можна знайти [тут](https://docs.spring.io/spring-boot/docs/current/reference/html/appendix-application-properties.html).
 
+## Приклад роботи із cookie & session
+
+Приклад, який містить код із вище описаного матеріалу можна знайти на [cs](https://github.com/endlesskwazar/spring-examples/tree/cs)
+
 ### Повідомлення про успішну операцію
 
 # Домашнє завдання
