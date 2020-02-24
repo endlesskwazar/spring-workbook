@@ -23,6 +23,95 @@ ${toc}
 
 # Thymeleaf
 
+**Thymeleaf** - двигун шаблонів Java для обробки та створення HTML, XML, JavaScript, CSS та тексту.
+
+Шаблонні файли (файл шаблону) Thymeleaf на самому деле є звичайним текстовим файлом, що містить формат XML/XHTML/HTML5. Thymeleaf Engine (Машина Thymeleaf) прочитав шаблонний файл (файл шаблону) і комбінує з об'єктами Java, щоб генерувати (генерувати) інший документ.
+
+![](../resources/img/02/14.png)
+
+## Відображення атрибутів
+
+Атрибут тегу th:text="${attributename}” може бути використаний для відображення значення атрибутів моделі. Додамо атрибут моделі з іменем serverTime в клас контролера:
+
+```java
+model.addAttribute("serverTime", dateFormat.format(new Date()));
+```
+
+HTML-код для відображення значення атрибута serverTime:
+
+```xml
+Current time is <span th:text="${serverTime}" />
+```
+
+## Робота із колекціями
+
+Якщо атрибут моделі є сукупністю об'єктів, то атрибут th:each тегу може бути використаний для повторення над ним. Давайте визначимо клас моделі студента з двома полями, id та ім'я:
+
+```java
+public class Student implements Serializable {
+    private Integer id;
+    private String name;
+    // standard getters and setters
+}
+```
+
+Тепер ми додамо список учнів як атрибут моделі в класі контролера:
+
+```java
+List<Student> students = new ArrayList<Student>();
+// logic to build student data
+model.addAttribute("students", students);
+```
+
+Нарешті, ми можемо використовувати код шаблону Thymeleaf для перегляду списку учнів та відображення всіх значень поля:
+
+```xml
+<tbody>
+    <tr th:each="student: ${students}">
+        <td th:text="${student.id}" />
+        <td th:text="${student.name}" />
+    </tr>
+</tbody>
+```
+
+## Умовні оператори
+
+### if, unless
+
+Атрибут th:if="${condition}" використовується для відображення розділу перегляду, якщо умова виконана. Атрибут th:unless = "${condition}" використовується для відображення розділу перегляду, якщо умова не виконується.
+
+```java
+public class Student implements Serializable {
+    private Integer id;
+    private String name;
+    private Character gender;
+     
+    // standard getters and setters
+}
+```
+
+Припустимо, це поле має два можливі значення (M або F) для позначення статі студента. Якщо ми хочемо відобразити слова "чоловічий" або "жіночий" замість одного символу, ми могли б досягти цього, використовуючи наступний код Thymeleaf:
+
+```xml
+<td>
+    <span th:if="${student.gender} == 'M'" th:text="Male" /> 
+    <span th:unless="${student.gender} == 'M'" th:text="Female" />
+</td>
+```
+
+### switch and case
+
+Атрибути th:switch і th:case використовуються для умовного відображення вмісту, використовуючи структуру оператора switch.
+
+Попередній код можна було переписати за допомогою атрибутів th:switch і th:case:
+
+```xml
+<td th:switch="${student.gender}">
+    <span th:case="'M'" th:text="Male" /> 
+    <span th:case="'F'" th:text="Female" />
+</td>
+```
+
 # Створюємо проект
 
 В Eclipse з установленим Spring Boot плагіном створимо новий проєкт із наступними залежностями:
