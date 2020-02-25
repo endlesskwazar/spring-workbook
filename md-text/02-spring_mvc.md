@@ -341,7 +341,7 @@ public String calculate(@RequestParam("expression") String expression) {
 		} else {
 			res = a - b;
 		}
-		model.addAttribute("Result of evaluation " + res);
+		model.addAttribute("message, ""Result of evaluation " + res);
 		return "res";
 	}
 ```
