@@ -229,9 +229,102 @@ spring.h2.console.enabled=true
 
 ### Повідомлення про успішну операцію
 
+Якщо ми подивимося на додавання або видалення продукту. Лише сама переадресація мало, що говорить користувачу про успішність операції:
+
+![](../resources/img/cookie,session/6.gif)
+
+Зробімо повідомлення про успішне додавання продукту. За основу візьмемо [shop-jdbc](https://github.com/endlesskwazar/spring-examples/tree/shop-jdbc)
+
+Для того щоб передати повідомлення про успішну операцію використаємо RequestAttributs - 
+спеціалізація інтерфейсу Model, який контролери можуть використовувати для вибору атрибутів для сценарію переадресації. Оскільки намір додавати атрибути переспрямування є дуже явним - тобто використовуватись для URL-адреси переспрямування, значення атрибутів можуть бути відформатовані як рядки та збережені таким чином, щоб вони могли бути додані до рядка запиту або розширені як змінні URI в org .springframework.web.servlet.view.RedirectView.
+
+Цей інтерфейс також пропонує спосіб додавання флеш-атрибутів. Ви можете використовувати RedirectAttributes для зберігання флеш-атрибутів, і вони будуть автоматично поширюватися на "вихід" FlashMap поточного запиту.
+
+Додамо об'єкт RequestAttribute як параметр в контроллер і додамо флеш - атрибут:
+
+**ProductController:**
+```java
+...
+@RequestMapping(value = "/products", method = RequestMethod.POST)
+public String create(@ModelAttribute Product product, RedirectAttributes redirectAttributes) {
+	productService.create(product);
+	redirectAttributes.addFlashAttribute("success_message", "Product created!");
+	return "redirect:/products";
+}
+...
+```
+
+І модифікуємо представлення:
+
+**list.html:**
+```xml
+<!DOCTYPE html>
+<html xmlns:layout="http://www.w3.org/1999/xhtml"
+	layout:decorate="~{layouts/layout}">
+<head>
+<title>Products</title>
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no">
+</head>
+<body>
+	<div class="container" layout:fragment="content">
+
+	<div class="alert alert-success alert-dismissible fade show" role="alert" th:if="${success_message}" >
+		<span th:text="${success_message}"></span>
+		<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+	</div>
+	
+		<div class="row">
+			<div class="col">
+				<h1>Products</h1>
+				<hr />
+				<a th:href="@{/products/create}" class="btn btn-primary mb-3"><i class="fas fa-plus-circle"></i> Create new product</a>
+				<table class="table table-hover bg-white">
+					<thead>
+						<tr>
+							<th>Title</th>
+							<th>Price</th>
+							<th>Description</th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="product : ${products}">
+							<td><a th:href="@{'/products/' + ${product.id}}"
+								th:text="${product.title}"></a></td>
+							<td th:text="${product.price}"></td>
+							<td th:text="${product.description}"></td>
+							<td>
+							<form method="POST" th:action="@{'/products/' + ${product.id}}">
+							<input type="hidden" name="_method" value="DELETE"/>
+							<button type="submit" class="btn btn-danger"><i
+									class="fas fa-trash-alt" style="color:white"></i></button>
+									</form>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
+```
+
+![](../resources/img/cookie,session/7.gif)
+
+Приклад доступний на [shop-jdbc-cs](https://github.com/endlesskwazar/spring-examples/tree/shop-jdbc-cs)
+
+
 # Домашнє завдання
 
-Запропонуйте власну реалізацію динамічного масиву, який заснований на звичайномк масивові. Інтерфейс - add(elem), remove(elem), remove(index), get(index), isExists(elem).
+На основі додатку, який Ви доробили в минулій лекції:
+
+1. Виправте функціонал закриття повідомлення на кнопку справа.
+2. Додайте повідомлення про успішне видалення.
+3. Додайте повідомлення про успішну модифікацію.
 
 # Контрольні запитання
 
@@ -242,3 +335,4 @@ spring.h2.console.enabled=true
 5. Поясніть анотацію CookieValue і її параметри defaultValue, required.
 6. Як в Spring можна працювати з сесією?
 7. Поясніть конфігурацію сесії в Spring.
+8. Для чого використовуэться RedirectAttributes? Що таке флеш - атрибут?
