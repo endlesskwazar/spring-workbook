@@ -2,641 +2,594 @@
 
 ${toc}
 
-# Exceptions
+# Що таке JPA?
 
-Виняток - це проблема (помилка), яка виникає під час виконання програми. Винятки можуть виникати у багатьох випадках, наприклад:
+JPA (Java Persistence API) це специфікація Java EE, що описує систему управління збереженням java об'єктів в таблиці реляційних баз даних в зручному вигляді. Сама Java не містить реалізації JPA, проте існує багато реалізацій даної специфікації від різних компаній (відкритих і немає). Це не єдиний спосіб збереження java об'єктів в бази даних (ORM систем), але один з найпопулярніших в Java світі.
 
-- Користувач ввів некоректні дані.
-- Файл, до якого звертається програма, не знайдений.
-- Мережеве з'єднання з сервером було втрачено під час передачі даних.
+Існує кілька реалізацій цього інтерфейсу, одна з найпопулярніших використовує для цього Hibernate. JPA реалізує концепцію ORM.
 
-Якщо ми, наприклад запустимо наступний код:
+# ORM
 
+В об'єктно-орієнтованому програмуванні об'єкти в програмі представляють об'єкти з реального світу. Як приклад можна розглянути адресну книгу, яка містить список людей разом з кількома телефонами і кількома адресами. В термінах об'єктно-орієнтованого програмування вони представлятимуться об'єктами класу «Людина», які міститимуть наступний список полів: ім'я, список (або масив) телефонів і список адрес.
+
+Суть проблеми полягає в перетворенні таких об'єктів у форму, в якій вони можуть бути збережені у файлах або базах даних, і які легко можуть бути витягнуті в подальшому, зі збереженням властивостей об'єктів і відношень між ними. Ці об'єкти називають «постійними» (англ. persistent). Історично існує кілька підходів до рішення цієї задачі.
+
+ORM (англ. Object-relational mapping, Об'єктно-реляційна проекція) — технологія програмування, яка зв'язує бази даних з концепціями об'єктно-орієнтованих мов програмування, створюючи «віртуальну об'єктну базу даних».
+
+![](../resources/img/jpa/1.jpg)
+
+# Entity
+
+**Entity** (Сутність) - POJO-клас, пов'язаний з БД за допомогою анотації (@Entity) або через XML. До такого класу ставляться такі вимоги:
+
+- Повинен мати порожній конструктор (public або protected)
+- Не може бути вкладеним, інтерфейсом або enum
+- Не може бути final і не може містити final-полів / властивостей
+- Повинен містити хоча б одне @id-поле
+
+При цьому entity може:
+
+- Містити непусті конструктори
+- Успадковуватися і бути успадкованим
+- Містити інші методи і реалізовувати інтерфейси
+
+# Hibernate
+
+**Hibernate** — засіб відображення між об'єктами та реляційними структурами (object-relational mapping, ORM) для платформи Java. Hibernate є вільним програмним забезпеченням, яке поширюється на умовах GNU Lesser General Public License. Hibernate надає легкий для використання каркас (фреймворк) для відображення між об'єктно-орієнтованою моделлю даних і традиційною реляційною базою даних.
+
+## Переваги Hibernate
+
+- Hibernate усуває безліч спагетті коду (повторюваного), який постійно переслідує розробника при роботі з JDBC. Приховує від розробника безліч коду, необхідного для управління ресурсами і дозволяє зосередитися на бізнес логіці.
+- Hibernate підтримує XML так само як і JPA анотації, що дозволяє зробити реалізацію коду незалежною.
+- Hibernate надає власний потужний мову запитів (HQL), який схожий на SQL. Варто відзначити, що HQL повністю об'єктно-орієнтований і розуміє такі принципи, як успадкування, поліморфізм і асоціації (зв'язку).
+- Hibernate - широко поширений open source проект. Завдяки цьому доступні тисячі відкритих статей, прикладів, а так само документації по використанню фреймворка.
+- Hibernate легко інтегрується з іншими Java EE фреймворками, наприклад, Spring Framework підтримує вбудовану інтеграцію з Hibernate.
+- Hibernate підтримує ледачу ініціалізацію використовуючи proxy об'єкти і виконує запити до бази даних тільки по необхідності.
+- Hibernate підтримує різні рівні cache, а отже може підвищити продуктивність.
+- Важливо, що Hibernate може використовувати чистий SQL, а значить підтримує можливість оптимізації запитів і роботи з будь-яким стороннім вендором БД і його фичами.
+
+## Переваги Hibernate в порівнянні із JDBC
+
+- Hibernate підтримує спадкування, асоціації та колекції, що не доступно в JDBC API.
+- Hibernate неявно використовує управління транзакціями. Більшість запитів не можна виконати поза транзакції. При використанні JDBC API для управління транзакціями потрібно явно використовувати commit і rollback.
+- JDBC API throws SQLException, яке відноситься до перевіряється винятків, а значить необхідно постійно писати безліч блоків try-catch. У більшості випадків це не потрібно для кожного виклику JDBC і використовується для управління транзакціями. Hibernate обертає виключення JDBC через непроверяемие JDBCException або HibernateException, а значить немає необхідності перевіряти їх в коді кожен раз. Вбудована підтримка управління транзакціями в Hibernate прибирає блоки try-catch.
+- Hibernate Query Language (HQL) більш об'єктно орієнтований і близький до Java мова запитів, ніж SQL в JDBC.
+- Hibernate підтримує анотації JPA, а значить код є стерпним на інші ORM фреймворки, що реалізують стандарт, в той час як код JDBC сильно прив'язаний до додатка.
+
+## Як працює Hibernate
+
+У Hibernate робота з БД здійснюється через об'єкт типу org.hibernate.Session
+
+Інтерфейс org.hibernate.Session є мостом між додатком і Hibernate. За допомогою сесій виконуються всі CRUD-операції з об'єктами-сутностями. Об'єкт типу Session отримують з org.hibernate.SessionFactory, який повинен бути присутнім в додатку у вигляді singleton.
+
+### Стани об'єктів
+
+Об'єкт-сутність може перебувати в одному з 3-х станів (статусів):
+
+- transient object. Об'єкти в даному статусі - це заповнені екземпляри класів-сутностей. Можуть бути збережені в БД. Не приєднані до сесії. Поле Id не повинно бути заповнене, інакше об'єкт має статус detached;
+- persistent object. Об'єкт в даному статусі - так звана збережена сутність, яка приєднана до конкретної сесії. Тільки в цьому статусі об'єкт взаємодіє з базою даних.
+- detached object. Об'єкт в даному статусі - це об'єкт, від'єднаний від сесії, може існувати або не існувати в БД.
+
+Будь-який об'єкт сутність можна переводити з одного статусу в інший. Для цього в інтерфейсі Session існують такі методи:
+
+- **persist (Object)** - перетворює об'єкт з transient в persistent, тобто приєднує до сесії і зберігає в БД. Однак, якщо ми призначимо значення полю Id об'єкта, то отримаємо PersistentObjectException - Hibernate вважатиме, що об'єкт detached, тобто. Існує в БД. При збереженні метод persist () відразу виконує insert, не роблячи select.
+- **merge (Object)** - перетворює об'єкт з transient або detached в persistent. Якщо з transient, то працює аналогічно persist () (генерує для об'єкта новий Id, навіть якщо він заданий), якщо з detached - завантажує об'єкт з БД, приєднує до сесії, а при збереженні виконує запит update.
+- **save (Object)** - зберігає об'єкт в БД, генеруючи новий Id, навіть якщо він встановлений. Object може бути в статусі transient або detached
+- **update (Object)** - оновлює об'єкт в БД, перетворюючи його в persistent (Object в статусі detached)
+- **saveOrUpdate (Object)** - викликає save () або update ()
+- **refresh (Object)** - оновлює detached-об'єкт, виконавши select до БД, і перетворює його в persistent
+- **get (Object.class, id)** - отримує з БД об'єкт класу-сутності з певним Id в статусі persistent
+
+![](../resources/img/jpa/2.png)
+
+# Конфігурація Hibernate
+
+## Налаштування сутностей
+
+**XML**:
+```xml
+<hibernate-mapping>
+    <class name="com.devcolibri.entity.User" table="user" catalog="test">
+        <id name="userId" type="java.lang.Integer">
+            <column name="USER_ID" />
+            <generator class="identity" />
+        </id>
+        <property name="firstName" type="string">
+            <column name="FIRST_NAME" length="20" not-null="true" unique="true" />
+        </property>
+        <property name="lastName" type="string">
+            <column name="LAST_NAME" length="20" not-null="true" unique="true" />
+        </property>
+    </class>
+</hibernate-mapping>
+```
+
+**Java - анотації**
+
+- @Entity
+  
+Стандартна анотація EJB, яка містяться в пакеті javax.persistence, тому ми імпортуємо цей пакет як перший крок. По-друге, ми використали анотацію @Entity до класу, який позначає цей клас як об'єктну сутність, тому він повинен мати конструктор без аргументів.
+
+- @Table
+
+Анотація @Table дозволяє вказувати деталі таблиці, яка буде використана для збереження об'єкта в базі даних.
+
+Анотація @Table містить атрибути, що дозволяють перевизначити назву таблиці, префікс схеми.
+
+- @Id @GeneratedValue
+
+Кожен компонент об'єктної сутності буде мати первинний ключ, який ви коментуєте в класі з @Id анотацією. Первинним ключем може бути одне поле або комбінація з декількох полів залежно від структури таблиці.
+
+За замовчуванням анотація @Id автоматично визначає найбільш підходящу стратегію генерації первинного ключа, але ви можете змінити це, застосувавши анотацію @GeneratedValue, яка приймає стратегію.
+
+- @Column
+
+Анотація @Column використовується для визначення деталей стовпця, до якого буде зіставлено поле або властивість. Можна використовувати анотацію стовпця з такими найчастіше використовуваними атрибутами:
+
+Атрибут name дозволяє явно вказати ім'я стовпця.
+Атрибут length дозволяє вказати розмір стовпця, який використовується для зіставлення значення, особливо для значення String.
+Атрибут nullable надає можливість стовпцям бути позначені NOT NULL при створенні схеми.
+Атрибут unique дозволяє позначити стовпець, що містить лише унікальні значення.
+
+## Relations
+
+### One to One
+
+**One to One by primary key**
+
+**User.java:**
 ```java
-public class Main {
-	
-	public static int div() {
-		return 1 / 0;
-	}
-
-	public static void main(String[] args) {
-		div();
-	}
-
-}
-```
-
-Як результат ми отримаємо виключення java.lang.ArithmeticExceptions
-
-```
-Exception in thread "main" java.lang.ArithmeticException: / by zero
-	at demo.Main.div(Main.java:6)
-	at demo.Main.main(Main.java:10)
-```
-
-Для того, щоб прграма не завершалася аварійно, виключення потрібно перехопити та обробити.
-
-Для цього використовуються 3 ключових слова:
-
-1. **try** - це ключове слово використовується для позначки початку блоку коду, який потенційно може привести до помилки.
-2. **catch** - ключове слово для позначки початку блоку коду, призначеного для перехоплення і обробки винятків.
-3. **finally** - ключове слово для позначки початку блоку коду, яке є додатковим. Цей блок поміщається після останнього блоку 'catch'. Управління зазвичай передається в блок 'finally' в будь-якому випадку.
-
-Приклад обробки виключення:
-
-```java
-public class Main {
-	
-	public static int div() {
-		return 1 / 0;
-	}
-
-	public static void main(String[] args) {
-		try {
-			div();
-		}
-		catch(Exception ex) {
-			System.out.println("Exception " + ex.getMessage());
-		}
-		
-	}
-}
-```
-
-Блок коду ``` catch(Exception ex) ``` перехоплює всі можливі вийнятки, які трапляються. Перехоплювати загальне виключення, зазвичай, не дуже хороша ідея, тому ми можемо переписати код, який буде перехоплювати лише ArithmeticException:
-
-```java
-public class Main {
-	
-	public static int div() {
-		return 1 / 0;
-	}
-
-	public static void main(String[] args) {
-		try {
-			div();
-		}
-		catch(ArithmeticException ex) {
-			System.out.println("Exception " + ex.getMessage());
-		}
-		
-	}
-}
-```
-
-Також ми можемо перехоплювати різні винятки використовуючи множинні блоки catch(віж вужчого до загального):
-
-```java
-public class Main {
-	
-	public static int div() {
-		return 1 / 0;
-	}
-
-	public static void main(String[] args) {
-		try {
-			div();
-		}
-		catch(ArithmeticException ex) {
-			System.out.println("Exception " + ex.getMessage());
-		}
-		catch(Exception ex) {
-			System.out.println("Somethong happens");
-		}
-		
-	}
-}
-```
-
-В Java 7 стала доступна нова конструкція, за допомогою якої можна перехоплювати кілька винятків одним блоком catch:
-
-```java
-try {  
- ... 
-} catch( IOException | SQLException ex ) {  
-  logger.log(ex); 
-  throw ex; 
-}
-```
-
-Тепер поговорімо детальніше про блок finally. Коли виняток передано, виконання методу направляється по нелінійному шляху. Це може стати джерелом проблем. Наприклад, при вході метод відкриває файл і закриває при виході. Щоб закриття файлу не було пропущено через обробку виключення, був запропонований механізм finally.
-
-Ключове слово finally створює блок коду, який буде виконаний після завершення блоку try / catch, але перед кодом, наступним за ним. Блок буде виконаний, незалежно від того, передано виняток чи ні. Оператор finally не обов'язковий, проте кожен оператор try вимагає наявності або catch, або finally. Код в блоці finally буде виконаний завжди.
-
-**Розгляньмо детальніше ієрархія вбудованих виключень в java**:
-
-![](../resources/img/5/1.png)
-
-Винятки діляться на кілька класів, але всі вони мають спільного предка - клас Throwable. Його нащадками є підкласи Exception і Error.
-
-Винятки (Exceptions) є результатом проблем в програмі, які в принципі можуть бути вирішені і передбачувані. Наприклад, відбулося ділення на нуль в цілих числах.
-
-Помилки (Errors) представляють собою більш серйозні проблеми, які, відповідно до специфікації Java, не слід намагатися обробляти у власній програмі, оскільки вони пов'язані з проблемами рівня JVM. Наприклад, виключення такого роду виникають, якщо закінчилася пам'ять, доступна віртуальній машині. Програма додаткову пам'ять все одно не зможе забезпечити для JVM.
-
-У Java всі виключення діляться на два типи: контрольовані виключення (checked) і неконтрольовані виключення (unchecked), до яких відносяться помилки (Errors) і виключення часу виконання (RuntimeExceptions, нащадок класу Exception).
-
-Контрольовані виключення є помилки, які можна і потрібно обробляти в програмі, до цього типу належать усі нащадки класу Exception (але не RuntimeException).
-
-Давайте ще раз поглянемо на код:
-
-```java
-public class Main {
-	
-	public static int div() {
-		return 1 / 0;
-	}
-
-	public static void main(String[] args) {
-		div();
-	}
-
-}
-```
-
-Ми можемо не використовувати try...catch оскільки AriphmeticExcpetion є uncheked. А тепер, погляньмо на інший код:
-
-```java
-public class Main {
-	
-	public static void read() {
-		InputStream is = new FileInputStream("manifest.mf");
-		BufferedReader buf = new BufferedReader(new InputStreamReader(is));
-		        
-		String line = buf.readLine();
-		StringBuilder sb = new StringBuilder();
-		        
-		while(line != null){
-		   sb.append(line).append("\n");
-		   line = buf.readLine();
-		}
-		        
-		String fileAsString = sb.toString();
-		System.out.println("Contents : " + fileAsString);
-
-	}
-
-	public static void main(String[] args) {
-		read();
-	}
-}
-```
-
-Цей код не скомпілюється, оскільки він містить checked exceptions, і нам потрібно їх обробляти. Або в самому методі:
-
-```java
-public static void read() {
-		InputStream is = null;
-		try {
-			is = new FileInputStream("manifest.mf");
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		BufferedReader buf = new BufferedReader(new InputStreamReader(is));
-		        
-		String line = null;
-		try {
-			line = buf.readLine();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		StringBuilder sb = new StringBuilder();
-		        
-		while(line != null){
-		   sb.append(line).append("\n");
-		   try {
-			line = buf.readLine();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		}
-		        
-		String fileAsString = sb.toString();
-		System.out.println("Contents : " + fileAsString);
-
-	}
-```
-
-або у місті виклику цього методу (в цьому випадку метод описує всі виключення, які він може кинути):
-
-```java
-public class Main {
-	
-	public static void read() throws IOException {
-		InputStream is = new FileInputStream("manifest.mf");
-		BufferedReader buf = new BufferedReader(new InputStreamReader(is));
-		        
-		String line = buf.readLine();
-		StringBuilder sb = new StringBuilder();
-		        
-		while(line != null){
-		   sb.append(line).append("\n");
-		   line = buf.readLine();
-		}
-		        
-		String fileAsString = sb.toString();
-		System.out.println("Contents : " + fileAsString);
-
-	}
-
-	public static void main(String[] args) {
-		try {
-			read();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-}
-```
-
-Насправді обробку виключення ще можна передати самій JVM:
-
-```java
-public class Main {
-	
-	public static void read() throws IOException {
-		InputStream is = new FileInputStream("manifest.mf");
-		BufferedReader buf = new BufferedReader(new InputStreamReader(is));
-		        
-		String line = buf.readLine();
-		StringBuilder sb = new StringBuilder();
-		        
-		while(line != null){
-		   sb.append(line).append("\n");
-		   line = buf.readLine();
-		}
-		        
-		String fileAsString = sb.toString();
-		System.out.println("Contents : " + fileAsString);
-
-	}
-
-	public static void main(String[] args) throws IOException {
-			read();
-	}
-}
-```
-
-## Створення власного exception
-
-Система не може передбачити всі винятки, іноді вам доведеться створити власний тип виключення для вашої програми. Вам потрібно успадковуватися від Exception (нагадаю, що цей клас успадковується від Trowable) і перевизначити потрібні методи класу Throwable. Або ви можете успадковуватися від вже існуючого типу, який найбільш близький за логікою з вашим винятком.
-
-Наприклад:
-
-```java
-class ZeroAmountException extends Exception {
-	
-	public ZeroAmountException(String errorMessage) {
-		super(errorMessage);
-	}
-}
-
-public class Main {
-	
-	public static void evalAmount (int amount) throws ZeroAmountException {
-		if (amount == 0)
-			throw new ZeroAmountException("Amount cant be zero");
-		System.out.println("Everything is ok!!!");
-	}
-
-	public static void main(String[] args) {
-			try {
-				evalAmount(0);
-			}
-			catch(ZeroAmountException ex) {
-				System.out.println(ex.getMessage());
-			}
-	}
-}
-```
-
-
-# Lambda - expressions
-
-Java замислювалася як об'єктно-орієнтована мова в 90-і роки, коли об'єктно-орієнтоване програмування було головною парадигмою в розробці додатків. Задовго до цього були функціональні мови програмування, такі, як Lisp і Scheme, але їх переваги не були оцінені за межами академічного середовища. Останнім часом функціональне програмування сильно виросло в значущості, тому що воно добре підходить для паралельного програмування та програмування, заснованого на події ( «reactive»). Це не означає, що об'єктна орієнтованість - погано. Навпаки, замість цього, виграшна стратегія - змішувати об'єктно-орієнтоване програмування та функціональне. Це має сенс, навіть якщо вам не потрібна паралельність. Наприклад, бібліотеки колекцій можуть отримати потужний API, якщо мова має зручний синтаксис для функціональних виразів.
-
-У функціональних мовах програмування на перший план виходять функції. Вони існують самі по собі. Можна привласнювати їх змінним і передавати через аргументи іншим функціям. JavaScript один з кращих прикладів функціональних мов програмування. На просторах Інтернету можна знайти хороші статті, в яких детально описані переваги JavaScript як функціональної мови. Функціональні мови мають в своєму арсеналі такі потужні інструменти як замикання (Closure), які забезпечують ряд переваг на традиційними способами створення програмного забезпечення. Замикання - це функція з прив'язаною до неї середовищем - таблицею, що зберігає посилання на всі нелокальних змінні функції. В Java замикання можна імітувати через Lambda-вирази. Безумовно між замиканнями і Lambda-виразами є відмінності і не малі, але Lambda-вирази є хорошою альтернативою замикань.
-
-Lambda-вирази - це анонімні функції (може і не 100% вірне визначення для Java, але зате привносить деяку ясність). Простіше кажучи, це метод без оголошення, тобто без модифікаторів доступу, поверненого значення і ім'я.
-
-Коротше кажучи, вони дозволяють написати метод і відразу ж використовувати його. Особливо корисно в разі одноразового виклику методу, тому що скорочує час на оголошення і написання методу без необхідності створювати клас.
-
-Lambda-вирази в Java зазвичай мають наступний синтаксис (аргументи) -> (тіло). наприклад:
-
-```
-(арг1, арг2...) -> { тіло }
-
-(тип1 арг1, тип2 арг2...) -> { тіло }
-```
-
-Далі йде кілька прикладів справжніх Lambda-виразів:
-
-```java
-(int a, int b) -> {  return a + b; }
-
-() -> System.out.println("Hello World");
-
-(String s) -> { System.out.println(s); }
-
-() -> 42
-
-() -> { return 3.1415 };
-```
-
-Структура Lambda-виразів:
-
-- Lambda-вирази можуть мати від 0 і більше вхідних параметрів.
-- Тип параметрів можна вказувати явно або може бути отриманий з контексту. Наприклад (int a) можна записати і так (a)
-- Параметри моміщаються в круглі дужки і розділяються комами. Наприклад (a, b) або (int a, int b) або (String a, int b, float c)
-- Якщо параметрів немає, то потрібно використовувати порожні круглі дужки. Наприклад () -> 42
-- Коли параметр один, якщо тип не вказується явно, дужки можна опустити. Приклад: a -> return a * a
-- Тіло Lambda-вирази може містити від 0 і більше виразів.
-- Якщо тіло складається з одного оператора, його можна не укладати в фігурні дужки, а повертається значення можна вказувати без ключового слова return.
-- В іншому випадку фігурні дужки обов'язкові (блок коду), а в кінці треба вказувати значення, що повертається з використанням ключового слова return (в іншому випадку типом значення, що повертається буде void).
-
-## Функціональний інтерфейс
-
-Функціональні інтерфейси в Java 8 - це інтерфейси, які містять в собі тільки один абстрактний метод. Функціональні інтерфейси мають тісний зв'язок з лямбда виразами і служать як основа для застосування лямбда виразів у функціональному програмуванні на Java.
-
-Давайте розглянемо приклад функціонального інтерфейсу:
-
-```java
-@FunctionalInterface
-interface functionalInterface{
-    abstract public void abstractMethod(); 
-}
-```
-
-functionalInterface, в нашому прикладі є типовим функціональним інтерфейсом, який містить в собі один абстрактний метод - abstractMethod (). Анотація @FunctionalInterface не обов'язкова, але я б рекомендував її використовувати, хоча б для самоконтролю:
-
-```java
-@FunctionalInterface // помилка компіляції
-interface functionalInterface{
-    abstract public void abstractMethod(); 
-    abstract public void abstractMethod1();
-}
-```
-
-Реалізація функціонального інтерфейсу, нічим не відрізняється від реалізації звичайного інтерфейсу:
-
-```java
-@FunctionalInterface 
-interface functionalInterface{
-    abstract public void abstractMethod(); 
-}
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
  
-class Test implements functionalInterface{
-    @Override
-    public void abstractMethod(){
-    }
+/ **
+ * Користувач системи
+ * /
+@Entity
+@Table (name = "users")
+public class User {
+     
+    @Id
+    @Column (name = "id")
+    @GeneratedValue (strategy = GenerationType.AUTO)
+    private Long id;
+     
+    / **
+     * Поля спільні для всех користувачів
+     * /
 }
 ```
 
-Крім звичайної реалізації класом, ми можемо реалізувати функціональні інтерфейси за допомогою лямбда виразів. Для початку створимо клас:
-
+**Partner.java:**
 ```java
-class Car{
-    private String name;
-    private boolean isFullDrive;
-    private boolean isGasEngine;
-    
-    public Car(String name, boolean isFullDrive, boolean isGasEngine){
-        this.name = name;
-        this.isFullDrive = isFullDrive;
-        this.isGasEngine = isGasEngine;
-    }
-    
-    public boolean isFullDrive(){
-        return isFullDrive;
-    }
-    
-    public boolean isGasEngine(){
-        return isGasEngine;
-    }
-    
-    @Override
-    public String toString(){
-        return name;
-    }
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
+import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.Table;
+ 
+/ **
+ * Партнер системи
+ * /
+@Entity
+@Table (name = "partners")
+public class Partner {
+ 
+    @OneToOne (cascade = CascadeType.ALL)
+    @PrimaryKeyJoinColumn
+    private User user;
+     
+     
+    @Id
+    @Column (name = "id")
+    @GeneratedValue (strategy = GenerationType.AUTO)
+    private Long id;
+     
+    / **
+     * Поля даних партнерів системи
+     * /
 }
 ```
 
-Черга за функціональним інтерфейсом:
+**One to One by primary key**
 
-```java	
-@FunctionalInterface
-interface CheckCar{
-    public boolean test(Car car);
-}
-```
-
+**User.java:**
 ```java
-public class Example{
-    private static void printTest(Car car, CheckCar check){
-        if(check.test(car)){
-            System.out.println(car);
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+ 
+@Entity
+@Table(name = "users")
+public class User {
+     
+    @Id
+    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+     
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name="passport_id")
+    private Passport passport;
+}
+```
+
+**Passport.java:**
+```java
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+ 
+@Entity
+@Table(name = "passports")
+public class Passport {
+ 
+    @Id
+    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+     
+    @OneToOne(mappedBy = "passport")
+    private User user;
+}
+```
+
+### One to Many
+
+![](../resources/img/jpa/3.png)
+
+Конфігурації, пов'язані з відображенням, будуть виконані з використанням анотацій JPA в класах моделі:
+
+**Cart.java:**
+```java
+@Entity
+@Table(name="CART")
+public class Cart {
+ 
+    //...
+ 
+    @OneToMany(mappedBy="cart")
+    private Set<Items> items;
+     
+    // getters and setters
+}
+```
+
+**Items.java:**
+```java
+@Entity
+@Table(name="ITEMS")
+public class Items {
+     
+    //...
+    @ManyToOne
+    @JoinColumn(name="cart_id", nullable=false)
+    private Cart cart;
+ 
+    public Items() {}
+     
+    // getters and setters
+}
+```
+
+### Many to Many
+
+Створіть звичайний Maven Project. Додайте наступні залежності:
+
+**pom.xml:**
+
+```xml
+  <dependencies>
+  	<dependency>
+    <groupId>org.hibernate</groupId>
+    <artifactId>hibernate-core</artifactId>
+    <version>5.4.1.Final</version>
+    </dependency>
+    
+    <dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+    <version>6.0.6</version>
+</dependency>
+  </dependencies>
+```
+
+Створіть hibernate.cfg.xml
+
+![](../resources/img/jpa/4.png)
+
+Вміст hibernate.cfg.xml наступний:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+
+<hibernate-configuration>
+    <session-factory>
+        <property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
+        <property name="hibernate.connection.url">
+jdbc:mysql://localhost/hb
+          </property>
+        <property name="hibernate.connection.username">root</property>
+        <property name="hibernate.dialect">org.hibernate.dialect.MySQL55Dialect</property>
+        <property name="hibernate.current_session_context_class">thread</property>
+        <property name="hibernate.show_sql">true</property>
+        <property name="hibernate.hbm2ddl.auto">create</property>
+    </session-factory>
+</hibernate-configuration>
+```
+
+Зверніть увагу на властивості:
+
+- hibernate.hbm2ddl.auto - Ця властивість вказує hibernate створювати таблиці.
+- hibernate.connection.driver_class - клас драйвера(в прикладі використовується Mysql)
+
+Створіть сутності:
+
+***Employee.java:***
+```java
+package hibernate.demo.domain;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
+import javax.persistence.JoinColumn;
+
+@Entity
+@Table(name = "Employee")
+public class Employee {
+
+	@Id
+	@Column(name = "employeeId")
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long employeeId;
+
+	@Column(name = "firstName")
+	private String firstName;
+
+	@Column(name = "lastName")
+	private String lastName;
+
+	@ManyToMany(cascade = { CascadeType.ALL })
+	@JoinTable(name = "Employee_Project", joinColumns = { @JoinColumn(name = "employeeId") }, inverseJoinColumns = {
+			@JoinColumn(name = "projectId") })
+	Set<Project> projects = new HashSet<Project>();
+
+	public Employee() {
+
+	}
+	public Employee(String firstName, String lastName) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
+    
+    public Employee(String firstName, String lastName, Set<Project> projects) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.projects = projects;
+    }
+    
+
+    public Long getEmployeeId() {
+        return employeeId;
+    }
+
+    public void setEmployeeId(Long employeeId) {
+        this.employeeId = employeeId;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public Set<Project> getProjects() {
+        return projects;
+    }
+
+    public void setProjects(Set<Project> projects) {
+        this.projects = projects;
+}
+}
+```
+
+**Project.java:**
+```java
+package hibernate.demo.domain;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "Project")
+public class Project{
+
+    @Id
+    @Column(name = "projectId")
+    @GeneratedValue
+    private Long projectId;
+
+    @Column(name = "title")
+    private String title;
+
+    @ManyToMany(mappedBy = "projects")
+    private Set<Employee> employees = new HashSet<Employee>();
+    
+    public Project() {
+        super();
+    }
+
+    public Project(String title) {
+        this.title = title;
+    }
+
+    public Long getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(Long projectId) {
+        this.projectId = projectId;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public Set<Employee> getEmployees() {
+        return employees;
+    }
+
+    public void setEmployees(Set<Employee> employees) {
+        this.employees = employees;
+    }  
+}
+```
+
+Для отримання об'єкта сесії ми створимо наступний допоміжній клас:
+
+**HibernateUtil.java:**
+```java
+package hibernate.demo.util;
+
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.service.ServiceRegistry;
+
+import hibernate.demo.domain.Employee;
+import hibernate.demo.domain.Project;
+
+public class HibernateUtil {
+    private static SessionFactory sessionFactory;
+
+    private static SessionFactory buildSessionFactory() {
+        try {
+            // Create the SessionFactory from hibernate-annotation.cfg.xml
+            Configuration configuration = new Configuration();
+            configuration.addAnnotatedClass(Employee.class);
+            configuration.addAnnotatedClass(Project.class);
+            configuration.configure("hibernate.cfg.xml");
+            System.out.println("Hibernate Annotation Configuration loaded");
+
+            ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties())
+                .build();
+            System.out.println("Hibernate Annotation serviceRegistry created");
+
+            SessionFactory sessionFactory = configuration.buildSessionFactory(serviceRegistry);
+
+            return sessionFactory;
+        } catch (Throwable ex) {
+            System.err.println("Initial SessionFactory creation failed." + ex);
+            ex.printStackTrace();
+            throw new ExceptionInInitializerError(ex);
         }
     }
-    
-    public static void main(String[] args) {
-        Car audiA3 = new Car("AudiA3", true, true);
-        Car audiA6 = new Car("AudiA6", true, false);
-        printTest(audiA3, c -> c.isFullDrive());
-        printTest(audiA3, c -> c.isGasEngine());
-        printTest(audiA6, c -> c.isFullDrive());
-        printTest(audiA6, c -> c.isGasEngine());
+
+    public static SessionFactory getSessionFactory() {
+        if (sessionFactory == null)
+            sessionFactory = buildSessionFactory();
+        return sessionFactory;
     }
 }
 ```
 
-Можна визначити функціональний інтерфейс, який є загальним для типу X і має функціональний метод, який приймає два аргументи типу X і повертає значення типу X.
+Демонстрація роботи застосунка:
 
+**Main.java:**
 ```java
-@FunctionalInterface
-interface ArgumentsProcessor<X>
-{
-    X process(X arg1, X arg2);
-}
-```
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-Приклад використання:
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 
-```java
-@FunctionalInterface
-interface ArgumentsProcessor<X>
-{
-    X process(X arg1, X arg2);
-}
-
-class IntArgSystem {
-	private ArgumentsProcessor<Integer> processor;
-	
-	public IntArgSystem(ArgumentsProcessor<Integer> processor) {
-		this.processor = processor;
-	}
-	
-	public Integer process(Integer a, Integer b) {
-		return this.processor.process(a, b);
-	}
-}
+import hibernate.demo.domain.Employee;
+import hibernate.demo.domain.Project;
+import hibernate.demo.util.HibernateUtil;
 
 public class Main {
 
 	public static void main(String[] args) {
-		IntArgSystem argSystem = new IntArgSystem((a, b) -> a + b);
-		System.out.println(argSystem.process(2, 3));
+		String[] employeeData = { "Peter Oven", "Allan Norman" };
+        String[] projectData = { "IT Project", "Networking Project" };
+        Set<Project> projects = new HashSet<Project>();
+        
+        Session session = HibernateUtil.getSessionFactory().openSession();
+ 
+        for (String proj : projectData) {
+            projects.add(new Project(proj));
+        }
+ 
+        
+        for (String emp : employeeData) {
+        	Transaction tr = session.beginTransaction();
+            Employee employee = new Employee(emp.split(" ")[0], 
+              emp.split(" ")[1]);
+ 
+            employee.setProjects(projects);
+            session.save(employee);
+            tr.commit();
+        }
+        
+        List<Employee> employeeList = session.createQuery("FROM Employee")
+                .list();
+        for(Employee employee : employeeList) {
+            employee.getProjects();
+        }
 	}
 }
 ```
 
-Можна визначити функціональний інтерфейс, який обмежений певними типами, використовуючи ключове слово розширення, тобто X extends Number:
-
-```java
-@FunctionalInterface
-public interface ArgumentsProcessor<X extends Number>
-{
-    X process(X arg1, X arg2);
-}
-```
-
-### Вбудовані функціональні інтерфейси
-
-**Predicate**
-
-```java
-@FunctionalInterface
-public interface Predicate<T> {
-    boolean test(T t);
-}
-```
-
-Predicate - це твердження, яке може бути істинним або хибним залежно від значень його змінних. Це можна розглядати як функцію, яка повертає значення, яке є істинним, або хибним.
-
-```java
-Predicate<String> isALongWord = new Predicate<String>() {
-    @Override
-    public boolean test(String t) {
-        return t.length() > 10;
-    }
-};
-String s = "successfully"
-boolean result = isALongWord.test(s);
-```
-
-**Consumer**
-
-```java
-@FunctionalInterface
-public interface Consumer<T> {
-    void accept(T t);
-}
-```
-
-Цей функціональний інтерфейс являє собою операцію, яка приймає єдиний вхідний аргумент і не повертає результату. Справжній результат - це побічні ефекти, які він викликає.
-
-```java
-class Product {
-  private double price = 0.0;
-
-  public void setPrice(double price) {
-    this.price = price;
-  }
-
-  public void printPrice() {
-    System.out.println(price);
-  }
-}
-
-public class Test {
-  public static void main(String[] args) {
-    Consumer<Product> updatePrice = p -> p.setPrice(5.9);
-    Product p = new Product();
-    updatePrice.accept(p);
-    p.printPrice();
-  }
-}
-```
-
-**Function**
-
-Цей функціональний інтерфейс являє собою функцію, яка приймає один аргумент і видає результат. Одне із використання, наприклад, це перетворення з одного об'єкта на інший.
-
-```java
-@FunctionalInterface
-public interface Function<T, R> {
-    R apply(T t);
-}
-```
-
-```java
-public class Test {
-  public static void main(String[] args) {
-    int n = 5;
-    modifyTheValue(n, val-> val + 10);
-    modifyTheValue(n, val-> val * 100);
-  }
-
-  static void modifyValue(int v, Function<Integer, Integer> function){
-    int result = function.apply(v);
-    System.out.println(newValue);
-  }
-
-}
-```
-
-**Supplier**
-
-Цей функціональний інтерфейс робить протилежне до Consumer, він не бере аргументів, але повертає певне значення.
-
-```java
-@FunctionalInterface
-public interface Supplier<T> {
-    T get();
-}
-```
-
-```java
-public class Program {
-    public static void main(String[] args) {
-        int n = 3;
-        display(() -> n + 10);
-        display(() -> n + 100);
-    }
-
-    static void display(Supplier<Integer> arg) {
-        System.out.println(arg.get());
-    }
-}
-```
-
-**BiPredicate**
-
-BiPredicate <T, U> схожий на Predicate, але тут ви можете створити умову на основі 2 заданих параметрів.
-
-```java
-@FunctionalInterface
-public interface BiPredicate<T, U> {
-    boolean test(T t, U u);
-}
-```
-
-**BiConsumer**
-
-BiConsumer <T, U> схожий на Consumer <T>, але він приймає 2 параметри, щоб зробити щось.
-
-**BiFunction**
-
-BiFunction <T, U, R> те саме, що Function <T, R>, але для виконання чогось може прийняти 2 параметри.
-
 # Домашнє завдання
-
-Доробіть до структури даних, яка була розроблена на минулій лабораторній роботі:
-
-1. Користувацький Exception, який може бути викинутий, якщо індекс переданий в метод get() від'ємний або знаходиться за межами діапазону. Розробние виключення unchecked.
-2. Зробіть метод transform в структурі даних, який приймає першим параметром індекс елемента, другим(функціональний інтерфейс, який вибраний Вами). Метод повинен передати знайдений елемент, ззовні його можуть модифікувати і повернути модифікований елемент.
 
 # Контрольні запитання
 
