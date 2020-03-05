@@ -589,6 +589,12 @@ public class Main {
 }
 ```
 
+# Spring Boot + Hibernate
+
+[shop-hb-basic](https://github.com/endlesskwazar/spring-examples/tree/shop-hb-basic)
+
+# JPA Repositories
+
 # Домашнє завдання
 
 # Контрольні запитання
