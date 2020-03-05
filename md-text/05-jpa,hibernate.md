@@ -593,11 +593,9 @@ public class Main {
 
 [shop-hb-basic](https://github.com/endlesskwazar/spring-examples/tree/shop-hb-basic)
 
-# JPA Repositories
-
 # Домашнє завдання
 
-Домашнє завдання відсутнє
+До проекту shop-hb-basic доробіть функціонал оновлення, використовуючи Hibernate.
 
 # Контрольні запитання
 
